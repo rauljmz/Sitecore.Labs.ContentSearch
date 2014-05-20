@@ -72,6 +72,11 @@ namespace Sitecore.Labs.ContentSearch
         {
         }
 
+        public void DoSearch()
+        {
+            DoSearch(null);
+        }
+
         public void DoSearch(string searchTerms)
         {
             var predicate = BuildPredicate(searchTerms);
@@ -133,32 +138,34 @@ namespace Sitecore.Labs.ContentSearch
                 predicate = predicate.Or(condition);
             }
 
-
-            if (FieldsToSearch.Any())
+            if (searchTerms != null)
             {
-                foreach (var field in FieldsToSearch)
+                if (FieldsToSearch.Any())
                 {
-                    if (Fuzziness > 0)
+                    foreach (var field in FieldsToSearch)
                     {
-                        predicate = predicate.Or(ri => ri[field].Like(searchTerms, Fuzziness));
+                        if (Fuzziness > 0)
+                        {
+                            predicate = predicate.Or(ri => ri[field].Like(searchTerms, Fuzziness));
+                        }
+                        else
+                        {
+                            predicate = predicate.Or(ri => ri[field].Contains(searchTerms));
+                        }
                     }
-                    else
-                    {
-                        predicate = predicate.Or(ri => ri[field].Contains(searchTerms));
-                    }
-                }
-            }
-            else
-            {
-                if (Fuzziness > 0)
-                {
-                    predicate = predicate.Or(ri => ri.Content.Like(searchTerms, Fuzziness));
                 }
                 else
                 {
-                    predicate = predicate.Or(ri => ri.Content.Contains(searchTerms));
-                }
+                    if (Fuzziness > 0)
+                    {
+                        predicate = predicate.Or(ri => ri.Content.Like(searchTerms, Fuzziness));
+                    }
+                    else
+                    {
+                        predicate = predicate.Or(ri => ri.Content.Contains(searchTerms));
+                    }
 
+                }
             }
 
             foreach (var condition in Must)
